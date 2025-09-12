@@ -16,7 +16,6 @@ struct PoopSizeSelector: View {
     
     @Binding var isSelected: Bool
     
-//    let storage = PoopStorage()
     let storage = PoopStorageService()
     
     var body: some View {
@@ -34,9 +33,11 @@ struct PoopSizeSelector: View {
                 .padding(.bottom)
             
             Button(action: {
-                isFirstSelected.toggle()
-                storage.savePoop(date: Date(), size: .small)
-                isSelected.toggle()
+                Task {
+                    isFirstSelected.toggle()
+                    try await storage.savePoop(date: Date(), size: .small)
+                    isSelected.toggle()
+                }
             }) {
                 Text("small")
                     .frame(maxWidth: .infinity, maxHeight: 40)
@@ -51,9 +52,11 @@ struct PoopSizeSelector: View {
             .foregroundStyle(isFirstSelected ? .white : .brown)
             
             Button(action: {
-                isSecondSelected.toggle()
-                storage.savePoop(date: Date(), size: .medium)
-                isSelected.toggle()
+                Task {
+                    isSecondSelected.toggle()
+                    try await storage.savePoop(date: Date(), size: .medium)
+                    isSelected.toggle()
+                }
             }) {
                 Text("medium")
                     .frame(maxWidth: .infinity, maxHeight: 47)
@@ -68,9 +71,11 @@ struct PoopSizeSelector: View {
             .foregroundStyle(isSecondSelected ? .white : .brown)
             
             Button(action: {
-                isThirdSelected.toggle()
-                storage.savePoop(date: Date(), size: .big)
-                isSelected.toggle()
+                Task {
+                    isThirdSelected.toggle()
+                    try await storage.savePoop(date: Date(), size: .big)
+                    isSelected.toggle()
+                }
             }) {
                 Text("big")
                     .frame(maxWidth: .infinity, maxHeight: 53)
@@ -85,9 +90,11 @@ struct PoopSizeSelector: View {
             .foregroundStyle(isThirdSelected ? .white : .brown)
             
             Button(action: {
-                isFourthSelected.toggle()
-                storage.savePoop(date: Date(), size: .tremendous)
-                isSelected.toggle()
+                Task {
+                    isFourthSelected.toggle()
+                    try await storage.savePoop(date: Date(), size: .tremendous)
+                    isSelected.toggle()
+                }
             }) {
                 Text("tremendous")
                     .frame(maxWidth: .infinity, maxHeight: 59)
@@ -102,9 +109,11 @@ struct PoopSizeSelector: View {
             .foregroundStyle(isFourthSelected ? .white : .brown)
             
             Button(action: {
-                isFifthSelected.toggle()
-                storage.savePoop(date: Date(), size: .diarrhea)
-                isSelected.toggle()
+                Task {
+                    isFifthSelected.toggle()
+                    try await storage.savePoop(date: Date(), size: .diarrhea)
+                    isSelected.toggle()
+                }
             }) {
                 VStack(spacing: 0) {
                     Text("diarrhea")

@@ -12,7 +12,6 @@ struct CalendarView: View {
     @State private var selectedMonth = Calendar.current.component(.month, from: Date())
     @State private var savedPoop: [PoopInfo] = []
 
-//    let poopStorage = PoopStorage()
     let poopStorage = PoopStorageService()
     let years = Array(2025...2030)
     let months = Array(1...12)
@@ -70,8 +69,10 @@ struct CalendarView: View {
                                 Menu("➕ 똥 추가") {
                                     ForEach(Size.allCases, id: \.self) { size in
                                         Button(size.rawValue) {
-                                            updateLocalPoopInfo(date: currentDate, size: size)
-                                            poopStorage.savePoop(date: currentDate, size: size)
+                                            Task {
+                                                updateLocalPoopInfo(date: currentDate, size: size)
+                                                try await poopStorage.savePoop(date: currentDate, size: size)
+                                            }
                                         }
                                     }
                                 }
@@ -83,8 +84,10 @@ struct CalendarView: View {
                                             
                                             ForEach(Size.allCases, id: \.self) { size in
                                                 Button("\(poopInfo.size == size ? "✔️ " : "")\(size.rawValue)") {
-                                                    updateLocalPoopInfo(date: poopInfo.date, size: size)
-                                                    poopStorage.savePoop(date: poopInfo.date, size: size)
+                                                    Task {
+                                                        updateLocalPoopInfo(date: poopInfo.date, size: size)
+                                                        try await poopStorage.savePoop(date: poopInfo.date, size: size)
+                                                    }
                                                 }
                                             }
                                             
@@ -94,8 +97,10 @@ struct CalendarView: View {
                                                 Menu("\(poopInfo.size.rawValue) \(getTime(date: poopInfo.date))") {
                                                     ForEach(Size.allCases, id: \.self) { size in
                                                         Button("\(poopInfo.size == size ? "✔️ " : "")\(size.rawValue)") {
-                                                            updateLocalPoopInfo(date: poopInfo.date, size: size)
-                                                            poopStorage.savePoop(date: poopInfo.date, size: size)
+                                                            Task {
+                                                                updateLocalPoopInfo(date: poopInfo.date, size: size)
+                                                                try await poopStorage.savePoop(date: poopInfo.date, size: size)
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -107,16 +112,20 @@ struct CalendarView: View {
                                         let poopInfo = poopList.first!
                                         
                                         Button("🧹 똥 제거") {
-                                            updateLocalPoopInfo(date: poopInfo.date, size: nil)
-                                            poopStorage.deletePoop(date: poopInfo.date)
+                                            Task {
+                                                updateLocalPoopInfo(date: poopInfo.date, size: nil)
+                                                try await poopStorage.deletePoop(date: poopInfo.date)
+                                            }
                                         }
                                     } else if poopList.count > 1 {
                                         Menu("🧹 똥 제거") {
                                             ForEach(poopList.indices, id: \.self) { index in
                                                 let poopInfo = poopList[index]
                                                 Button("\(poopInfo.size.rawValue) \(getTime(date: poopInfo.date))") {
-                                                    updateLocalPoopInfo(date: poopInfo.date, size: nil)
-                                                    poopStorage.deletePoop(date: poopInfo.date)
+                                                    Task {
+                                                        updateLocalPoopInfo(date: poopInfo.date, size: nil)
+                                                        try await poopStorage.deletePoop(date: poopInfo.date)
+                                                    }
                                                 }
                                             }
                                         }
@@ -198,9 +207,11 @@ struct CalendarView: View {
         }
         .padding()
         .onAppear {
-            poopStorage.loadAllPoop(completion: { poop in
-                savedPoop = poop
-            })
+            Task {
+                try await poopStorage.loadAllPoop(completion: { poop in
+                    savedPoop = poop
+                })
+            }
         }
     }
     
@@ -267,6 +278,8 @@ struct CalendarView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        
         return formatter.string(from: poopInfo.date)
     }
     
