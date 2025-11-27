@@ -13,7 +13,7 @@ struct MainView: View {
     @State private var isSelectorVisible = false
     @State private var isWelcomeTextVisible = false
     @State private var isCheckTextVisible = false
-    @State private var isCalendarVisisble = false
+    @State private var isHomeVisisble = false
     @State private var isDirectCalendarClicked = false
     
     private let firstTextVisibleTime = 1.0
@@ -93,8 +93,8 @@ struct MainView: View {
                     )
             }
             
-            if isCalendarVisisble {
-                CalendarView()
+            if isHomeVisisble {
+                HomeView()
             }
         }
         .onChange(of: isClicked) {
@@ -140,7 +140,7 @@ struct MainView: View {
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + firstDelayTime + (aniDuration * 4) + (firstTextVisibleTime + textVisibleTime)) { // 3.5
                     withAnimation(.easeInOut(duration: aniDuration)) {
-                        isCalendarVisisble = true
+                        isHomeVisisble = true
                     }
                 }
             }
@@ -161,7 +161,7 @@ struct MainView: View {
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + firstDelayTime + (aniDuration * 2) + textVisibleTime) { // 2.0
                     withAnimation(.easeInOut(duration: aniDuration)) {
-                        isCalendarVisisble = true
+                        isHomeVisisble = true
                     }
                 }
             }

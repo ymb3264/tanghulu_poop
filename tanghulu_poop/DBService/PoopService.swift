@@ -1,5 +1,5 @@
 //
-//  StorageService.swift
+//  PoopService.swift
 //  tanghulu_poop
 //
 //  Created by Mohwa Yoon on 5/16/25.
@@ -18,20 +18,10 @@ enum Size: String, Codable, CaseIterable {
     case big
     case tremendous
     case diarrhea
+    case product
 }
 
-enum AWSKit {
-    static func cognitoProvider() -> AWSCognitoCredentialsProvider {
-        guard let p = AWSServiceManager.default()
-            .defaultServiceConfiguration?
-            .credentialsProvider as? AWSCognitoCredentialsProvider else {
-            fatalError("No credentials provider configured")
-        }
-        return p
-    }
-}
-
-class PoopStorageService {
+class PoopService {
 //        let formatter = DateFormatter()
 //        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     private let formatter: ISO8601DateFormatter
@@ -44,25 +34,8 @@ class PoopStorageService {
         self.formatter = f
     }
     
-    func loadIdentityId() async throws -> String {
-        let provider = AWSKit.cognitoProvider()
-        return try await withCheckedThrowingContinuation { continuation in
-            provider.getIdentityId().continueWith { task in
-                if let error = task.error {
-                    continuation.resume(throwing: error)
-                } else if let identityId = task.result as String? {
-                    continuation.resume(returning: identityId)
-                } else {
-                    continuation.resume(throwing: NSError(domain: "App", code: -1,
-                                                          userInfo: [NSLocalizedDescriptionKey: "No identityId"]))
-                }
-                return nil
-            }
-        }
-    }
-    
     func savePoop(date: Date, size: Size) async throws {
-        let userId = try await loadIdentityId()
+        let userId = try await AWSService.loadIdentityId()
 
         let model = PoopModel()
         model?.userId = userId
@@ -80,7 +53,7 @@ class PoopStorageService {
     }
 
     func loadPoop(date: Date, completion: @escaping (Size?) -> Void) async throws {
-        let userId = try await loadIdentityId()
+        let userId = try await AWSService.loadIdentityId()
         
         let dateString = formatter.string(from: date)
 
@@ -100,7 +73,7 @@ class PoopStorageService {
     }
     
     func loadAllPoop(completion: @escaping ([PoopInfo]) -> Void) async throws {
-        let userId = try await loadIdentityId()
+        let userId = try await AWSService.loadIdentityId()
 
         let queryExpression = AWSDynamoDBQueryExpression()
         queryExpression.keyConditionExpression = "userId = :userId"
@@ -127,13 +100,14 @@ class PoopStorageService {
             } else {
                 completion([])
             }
+            
             return nil
         }
     }
     
 //    func deletePoop(for userId: String = "mobul", date: Date, completion: @escaping (Bool) -> Void) {
     func deletePoop(date: Date) async throws {
-        let userId = try await loadIdentityId()
+        let userId = try await AWSService.loadIdentityId()
 
         let dateString = formatter.string(from: date)
 

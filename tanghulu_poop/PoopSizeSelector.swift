@@ -16,7 +16,7 @@ struct PoopSizeSelector: View {
     
     @Binding var isSelected: Bool
     
-    let storage = PoopStorageService()
+    let poopService = PoopService()
     
     var body: some View {
         VStack {
@@ -35,7 +35,7 @@ struct PoopSizeSelector: View {
             Button(action: {
                 Task {
                     isFirstSelected.toggle()
-                    try await storage.savePoop(date: Date(), size: .small)
+                    try await poopService.savePoop(date: Date(), size: .small)
                     isSelected.toggle()
                 }
             }) {
@@ -54,7 +54,7 @@ struct PoopSizeSelector: View {
             Button(action: {
                 Task {
                     isSecondSelected.toggle()
-                    try await storage.savePoop(date: Date(), size: .medium)
+                    try await poopService.savePoop(date: Date(), size: .medium)
                     isSelected.toggle()
                 }
             }) {
@@ -73,7 +73,7 @@ struct PoopSizeSelector: View {
             Button(action: {
                 Task {
                     isThirdSelected.toggle()
-                    try await storage.savePoop(date: Date(), size: .big)
+                    try await poopService.savePoop(date: Date(), size: .big)
                     isSelected.toggle()
                 }
             }) {
@@ -92,7 +92,7 @@ struct PoopSizeSelector: View {
             Button(action: {
                 Task {
                     isFourthSelected.toggle()
-                    try await storage.savePoop(date: Date(), size: .tremendous)
+                    try await poopService.savePoop(date: Date(), size: .tremendous)
                     isSelected.toggle()
                 }
             }) {
@@ -111,7 +111,7 @@ struct PoopSizeSelector: View {
             Button(action: {
                 Task {
                     isFifthSelected.toggle()
-                    try await storage.savePoop(date: Date(), size: .diarrhea)
+                    try await poopService.savePoop(date: Date(), size: .diarrhea)
                     isSelected.toggle()
                 }
             }) {

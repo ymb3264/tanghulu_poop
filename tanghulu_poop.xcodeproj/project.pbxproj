@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		DA6200302DD735210084DADD /* AWSCore in Frameworks */ = {isa = PBXBuildFile; productRef = DA62002F2DD735210084DADD /* AWSCore */; };
 		DA6200322DD735D30084DADD /* AWSDynamoDB in Frameworks */ = {isa = PBXBuildFile; productRef = DA6200312DD735D30084DADD /* AWSDynamoDB */; };
+		DAFA7E992ED8CAF7009CCEA3 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = DAFA7E982ED8CAF7009CCEA3 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAFA7E992ED8CAF7009CCEA3 /* Kingfisher in Frameworks */,
 				DA6200322DD735D30084DADD /* AWSDynamoDB in Frameworks */,
 				DA6200302DD735210084DADD /* AWSCore in Frameworks */,
 			);
@@ -121,6 +123,7 @@
 			packageProductDependencies = (
 				DA62002F2DD735210084DADD /* AWSCore */,
 				DA6200312DD735D30084DADD /* AWSDynamoDB */,
+				DAFA7E982ED8CAF7009CCEA3 /* Kingfisher */,
 			);
 			productName = tanghulu_poop;
 			productReference = DAF1DDDE2DC8D8CB00F6CF28 /* tanghulu_poop.app */;
@@ -206,6 +209,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DA62002E2DD735210084DADD /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */,
+				DAFA7E972ED8CAF7009CCEA3 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DAF1DDDF2DC8D8CB00F6CF28 /* Products */;
@@ -617,6 +621,14 @@
 				minimumVersion = 2.40.2;
 			};
 		};
+		DAFA7E972ED8CAF7009CCEA3 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.6.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -629,6 +641,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DA62002E2DD735210084DADD /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
 			productName = AWSDynamoDB;
+		};
+		DAFA7E982ED8CAF7009CCEA3 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DAFA7E972ED8CAF7009CCEA3 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
