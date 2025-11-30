@@ -35,11 +35,6 @@ struct ProductsView: View {
                     RoundedRectangle(cornerRadius: 20).stroke(.moare, lineWidth: 2)
                 )
             
-            // TODO:
-            // 추후 추가
-            // - 며칠이상 똥 기록화면 사용자 똥 분석 기반 데이터 표시
-            //  - ex) 30일 이상 기록 했을 시 요일별로 똥 쌀 확률 표시
-            
             FitScrollView(maxHeight: 450) {
                 ForEach(Array(ranked.enumerated()), id: \.element.product.productId) { index, item in
                     let rank = item.rank
@@ -253,28 +248,40 @@ struct ContentHeightKey: PreferenceKey {
 struct FitScrollView<Content: View>: View {
     let maxHeight: CGFloat
     @ViewBuilder var content: Content
-
+    
     @State private var contentHeight: CGFloat = 0
-
+    
     var body: some View {
-        ScrollView {
-            content
-//                .fixedSize(horizontal: false, vertical: true)
+        ZStack(alignment: .top) {
+            // maxHeight보다 contentHeight가 크면 .hidden()으로 해도 뒤에 공간을 차지해서 아예 그리지 않게함.
+            if contentHeight <= maxHeight {
+                // 1) 실제 높이 측정용 (ScrollView 밖)
+                VStack(spacing: 0) {
+                    content
+                }
                 .background(
                     GeometryReader { proxy in
                         Color.clear
-                            .preference(key: ContentHeightKey.self,
-                                        value: proxy.size.height)
+                            .onAppear {
+                                contentHeight = proxy.size.height
+                            }
+                            .onChange(of: proxy.size) {
+                                contentHeight = proxy.size.height
+                            }
                     }
                 )
+                .hidden() // 화면엔 안 보이게
+            }
+            
+            // 2) 실제 표시용 ScrollView
+            ScrollView {
+                VStack(spacing: 0) {
+                    content
+                }
+            }
+            .frame(height: min(contentHeight, maxHeight))
+            .scrollDisabled(contentHeight <= maxHeight)
         }
-        .onPreferenceChange(ContentHeightKey.self) { h in
-            contentHeight = h
-        }
-        // NOTE: 초기 0일 때는 maxHeight로
-        .frame(height: contentHeight > 0
-                         ? min(contentHeight, maxHeight)
-                         : maxHeight)
     }
 }
 
