@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PoopSizeSelector: View {
+struct PoopSizeSelectView: View {
     @State private var isFirstSelected = false
     @State private var isSecondSelected = false
     @State private var isThirdSelected = false
@@ -138,7 +138,3 @@ struct PoopSizeSelector: View {
         }
     }
 }
-
-//#Preview {
-//    PoopSizeSelector()
-//}

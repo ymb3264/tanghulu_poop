@@ -11,6 +11,8 @@ class PoopModel: AWSDynamoDBObjectModel, AWSDynamoDBModeling {
     @objc var userId: String?
     @objc var date: String?
     @objc var size: String?
+    @objc var productId: String?
+    @objc var productName: String?
 
     class func dynamoDBTableName() -> String {
         return "TanghuluPoop"

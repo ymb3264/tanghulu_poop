@@ -10,15 +10,23 @@ import AWSDynamoDB
 struct PoopInfo: Codable, Equatable {
     let date: Date
     let size: Size
+    let productId: String?
+    let productName: String?
+    
+    init(date: Date, size: Size, productId: String? = nil, productName: String? = nil) {
+        self.date = date
+        self.size = size
+        self.productId = productId
+        self.productName = productName
+    }
 }
 
 enum Size: String, Codable, CaseIterable {
-    case small
-    case medium
-    case big
-    case tremendous
-    case diarrhea
-    case product
+    case small, medium, big, tremendous, diarrhea, product
+    
+    static var displayCases: [Size] {
+        allCases.filter { $0 != .product }
+    }
 }
 
 class PoopService {
@@ -93,7 +101,7 @@ class PoopService {
                     else {
                         return nil
                     }
-                    return PoopInfo(date: date, size: size)
+                    return PoopInfo(date: date, size: size, productId: item.productId, productName: item.productName)
                 }
 
                 completion(poopInfos)

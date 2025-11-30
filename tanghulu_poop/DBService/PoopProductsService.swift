@@ -12,7 +12,7 @@ struct PoopProduct: Codable, Equatable {
     let createdBy: String
     let name: String
     let imageUrl: String?
-    let recommendCount: Int
+    var recommendCount: Int
 }
 
 struct UserProductVote: Codable, Equatable {
@@ -74,7 +74,7 @@ class PoopProductsService {
         }
     }
     
-    func addProduct(date: Date, productId: String, name: String) async throws {
+    func addProduct(date: Date, productId: String, name: String, completion: @escaping () -> Void = {}) async throws {
         let userId = try await AWSService.loadIdentityId()
 
         let model = ProductsModel()
@@ -89,6 +89,7 @@ class PoopProductsService {
                 print("Save error: \(error)")
             } else {
                 print("Saved product for \(model!.name!)")
+                completion()
             }
             return nil
         }
@@ -132,15 +133,21 @@ class PoopProductsService {
         model?.userId = userId
         model?.productId = productId
         model?.createdAt = formatter.string(from: date)
+        
+        try await saveAsync(model!)
+        
+        try await updateRecommendCount(productId: productId, delta: 1)
+        
+        print("✅ Added vote + increased count")
 
-        objectMapper.save(model!).continueWith { task in
-            if let error = task.error {
-                print("Add error: \(error)")
-            } else {
-                print("Added vote for \(model!.productId!)")
-            }
-            return nil
-        }
+//        objectMapper.save(model!).continueWith { task in
+//            if let error = task.error {
+//                print("Add error: \(error)")
+//            } else {
+//                print("Added vote for \(model!.productId!)")
+//            }
+//            return nil
+//        }
     }
     
     func cancelVote(productId: String) async throws {
@@ -150,15 +157,97 @@ class PoopProductsService {
         itemToDelete?.userId = userId
         itemToDelete?.productId = productId
 
-        objectMapper.remove(itemToDelete!).continueWith { task in
-            if let error = task.error {
-                print("❌ Delete error: \(error)")
-//                completion(false)
-            } else {
-                print("✅ Deleted vote for \(productId)")
-//                completion(true)
+        try await removeAsync(itemToDelete!)
+        
+        try await updateRecommendCount(productId: productId, delta: -1)
+        
+        print("✅ Deleted vote + decreased count")
+        
+//        objectMapper.remove(itemToDelete!).continueWith { task in
+//            if let error = task.error {
+//                print("❌ Delete error: \(error)")
+////                completion(false)
+//            } else {
+//                print("✅ Deleted vote for \(productId)")
+////                completion(true)
+//            }
+//            return nil
+//        }
+    }
+    
+    // “카운트 +1/-1” 같은 **원자적 증가(동시성 안전)**는 objectMapper가 직접 지원을 잘 안 해서, 그 경우엔 low-level updateItem이 더 적합. - by gpt
+    func updateRecommendCount(productId: String, delta: Int) async throws {
+        let update = AWSDynamoDBUpdateItemInput()!
+        update.tableName = "PoopProducts"
+        
+        let keyValue = AWSDynamoDBAttributeValue()
+        keyValue?.s = productId
+
+        update.key = [
+            "productId": keyValue!
+        ]
+
+        update.updateExpression = "SET recommendCount = if_not_exists(recommendCount, :zero) + :delta"
+        
+        let deltaValue = AWSDynamoDBAttributeValue()
+        deltaValue?.n = "\(delta)"
+        
+        update.expressionAttributeValues = [
+            ":delta": deltaValue!,
+            ":zero": {
+                let v = AWSDynamoDBAttributeValue()
+                v?.n = "0"
+                return v!
+            }()
+        ]
+
+        // recommendCount 0 아래로 못내려가게 방지
+        if delta < 0 {
+            update.conditionExpression = "recommendCount >= :absDelta"
+            
+            let absDeltaValue = AWSDynamoDBAttributeValue()
+            absDeltaValue?.n = "\(-delta)"
+            
+            update.expressionAttributeValues?[":absDelta"] = absDeltaValue!
+        }
+        
+        _ = try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            AWSDynamoDB.default().updateItem(update).continueWith { task in
+                if let error = task.error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume(returning: ())
+                }
+                return nil
             }
-            return nil
+        }
+    }
+    
+    // objectMapper.save를 async/await로 감싸는 헬퍼
+    private func saveAsync(_ model: AWSDynamoDBObjectModel & AWSDynamoDBModeling) async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            objectMapper.save(model).continueWith { task in
+                if let error = task.error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume(returning: ())
+                }
+                return nil
+            }
+        }
+    }
+    
+    // objectMapper.remove를 async/await로 감싸는 헬퍼
+    private func removeAsync(_ model: AWSDynamoDBObjectModel & AWSDynamoDBModeling) async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            objectMapper.remove(model).continueWith { task in
+                if let error = task.error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume(returning: ())
+                }
+                return nil
+            }
         }
     }
 }
