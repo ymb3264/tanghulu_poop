@@ -13,14 +13,95 @@ struct CalendarView: View {
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var selectedMonth = Calendar.current.component(.month, from: Date())
     @State private var savedPoop: [PoopInfo] = []
+    @State private var isDescOpened = false
     
     private let years = Array(2025...2030)
     private let months = Array(1...12)
     
     private let poopService = PoopService()
     
+    @AppStorage("isNormalMode") private var isNormalModeRaw = true
+    private var isNormalModeEffective: Bool {
+        if !CalendarUtil.isBetweenDec1AndDec26() {
+            // 범위 밖이면 저장값이 뭐든 무조건 true
+            return true
+        } else {
+            // 범위 안이면:
+            //  저장값이 없으면 false
+            //  저장값이 있으면 그 값 사용
+            //
+            // AppStorage는 "없으면 default true"라서
+            // '없음'을 구분하려면 UserDefaults를 직접 확인해야 함.
+            let hasStoredValue = UserDefaults.standard.object(forKey: "isNormalMode") != nil
+            return hasStoredValue ? isNormalModeRaw : false
+        }
+    }
+    
+//    init(productNames: Binding<[String]>) {
+//        self._productNames = productNames
+//        UserDefaults.standard.removeObject(forKey: "isNormalMode")
+//    }
+    
     var body: some View {
         VStack {
+            if CalendarUtil.isBetweenDec1AndDec26() {
+                if !isDescOpened {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isDescOpened = true
+                        }
+                    }) {
+                        Text("클릭 🎄")
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                
+                if isDescOpened {
+                    VStack(spacing: 12) {
+                        Text("12월 25일")
+                            .foregroundStyle(.darkRed)
+                        + Text("까지 똥이 🎄로 표시됩니다.")
+                            .foregroundStyle(.darkGreen)
+                        
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                if isNormalModeEffective {
+                                    isNormalModeRaw = false
+//                                    UserDefaults.standard.set(false, forKey: "isNormalMode")
+                                } else {
+                                    isNormalModeRaw = true
+//                                    UserDefaults.standard.set(true, forKey: "isNormalMode")
+                                }
+                            }) {
+                                Text(isNormalModeEffective ? "옵션 켜기" : "옵션 끄기")
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 8)
+                                    .overlay {
+                                        Capsule()
+                                            .stroke(.secondary, lineWidth: 1)
+                                    }
+                            }
+                            .foregroundStyle(.secondary)
+                            
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    isDescOpened = false
+                                }
+                            }) {
+                                Text("닫기")
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 8)
+                                    .overlay {
+                                        Capsule()
+                                            .stroke(.secondary, lineWidth: 1)
+                                    }
+                            }
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            
             // 🔽 년/월 선택 Picker
             HStack {
                 Picker("연도", selection: $selectedYear) {
@@ -200,8 +281,13 @@ struct CalendarView: View {
                                         }
                                         
                                         ZStack {
-                                            Text(poopInfo.size == .diarrhea ? "🤢" : "💩")
-                                                .font(.system(size: poopSize))
+                                            if isNormalModeEffective {
+                                                Text(poopInfo.size == .diarrhea ? "🤢" : "💩")
+                                                    .font(.system(size: poopSize))
+                                            } else {
+                                                Text("🎄")
+                                                    .font(.system(size: poopSize))
+                                            }
                                             
                                             HStack {
                                                 Text(sizeText)
