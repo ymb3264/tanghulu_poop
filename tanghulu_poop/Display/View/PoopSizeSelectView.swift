@@ -13,6 +13,7 @@ struct PoopSizeSelectView: View {
     @State private var isThirdSelected = false
     @State private var isFourthSelected = false
     @State private var isFifthSelected = false
+    @State private var isRabbitSelected = false
     
     @Binding var isSelected: Bool
     
@@ -31,6 +32,25 @@ struct PoopSizeSelectView: View {
                     }
                 }
                 .padding(.bottom)
+            
+            Button(action: {
+                Task {
+                    isRabbitSelected.toggle()
+                    try await poopService.savePoop(date: Date(), size: .rabbit)
+                    isSelected.toggle()
+                }
+            }) {
+                Text("rabbit ◦ ◦ ◦ ◦")
+                    .frame(maxWidth: .infinity, maxHeight: 40)
+                    .font(.system(size: 15, weight: .semibold))
+                    .background(
+                        isRabbitSelected ?
+                        AnyView(RoundedRectangle(cornerRadius: 20).fill(Color.brown)) :
+                            AnyView(RoundedRectangle(cornerRadius: 20).stroke(Color.brown, lineWidth: 2))
+                    )
+                    .padding(.horizontal)
+            }
+            .foregroundStyle(isRabbitSelected ? .white : .brown)
             
             Button(action: {
                 Task {

@@ -22,7 +22,7 @@ struct PoopInfo: Codable, Equatable {
 }
 
 enum Size: String, Codable, CaseIterable {
-    case small, medium, big, tremendous, diarrhea, product
+    case small, medium, big, tremendous, diarrhea, product, rabbit
     
     static var displayCases: [Size] {
         allCases.filter { $0 != .product }
@@ -42,13 +42,14 @@ class PoopService {
         self.formatter = f
     }
     
-    func savePoop(date: Date, size: Size) async throws {
+    func savePoop(date: Date, size: Size, productName: String? = nil) async throws {
         let userId = try await AWSService.loadIdentityId()
 
         let model = PoopModel()
         model?.userId = userId
         model?.date = formatter.string(from: date)
         model?.size = size.rawValue
+        model?.productName = productName
 
         objectMapper.save(model!).continueWith { task in
             if let error = task.error {

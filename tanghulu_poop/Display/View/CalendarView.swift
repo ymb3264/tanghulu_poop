@@ -22,19 +22,48 @@ struct CalendarView: View {
     
     @AppStorage("isNormalMode") private var isNormalModeRaw = true
     private var isNormalModeEffective: Bool {
-        if !CalendarUtil.isBetweenDec1AndDec26() {
-            // 범위 밖이면 저장값이 뭐든 무조건 true
+//        if !CalendarUtil.isBetweenDec1AndDec26() {
+//            // 범위 밖이면 저장값이 뭐든 무조건 true
+//            return true
+//        } else {
+//            // 범위 안이면:
+//            //  저장값이 없으면 false
+//            //  저장값이 있으면 그 값 사용
+//            //
+//            // AppStorage는 "없으면 default true"라서
+//            // '없음'을 구분하려면 UserDefaults를 직접 확인해야 함.
+//            let hasStoredValue = UserDefaults.standard.object(forKey: "isNormalMode") != nil
+//            return hasStoredValue ? isNormalModeRaw : false
+//        }
+        
+        // 1) 오늘이 이벤트 기간(12/1~12/25)인지
+        guard CalendarUtil.isBetweenDec1AndDec25() else {
             return true
-        } else {
-            // 범위 안이면:
-            //  저장값이 없으면 false
-            //  저장값이 있으면 그 값 사용
-            //
-            // AppStorage는 "없으면 default true"라서
-            // '없음'을 구분하려면 UserDefaults를 직접 확인해야 함.
-            let hasStoredValue = UserDefaults.standard.object(forKey: "isNormalMode") != nil
-            return hasStoredValue ? isNormalModeRaw : false
         }
+        
+        // 2) 선택된 달력이 "현재년도 12월"인지
+        let currentYear = Calendar.current.component(.year, from: Date())
+        let isViewingCurrentDecember = (selectedYear == currentYear && selectedMonth == 12)
+        
+        // 이벤트 기간이더라도 현재년도 12월을 보고 있지 않으면 무조건 true
+        guard isViewingCurrentDecember else {
+            return true
+        }
+        
+        // 3) (이벤트 기간 + 현재년도 12월을 보고 있을 때만) 기존 저장 로직 적용
+        let hasStoredValue = UserDefaults.standard.object(forKey: "isNormalMode") != nil
+        return hasStoredValue ? isNormalModeRaw : false
+    }
+    private var isEventToggleOpened: Bool {
+        // 1) 오늘이 이벤트 기간(12/1~12/25)인지
+        guard CalendarUtil.isBetweenDec1AndDec25() else {
+            return false
+        }
+        
+        // 2) 선택된 달력이 "현재년도 12월"인지
+        // 이벤트 기간이더라도 현재년도 12월을 보고 있지 않으면 무조건 false
+        let currentYear = Calendar.current.component(.year, from: Date())
+        return (selectedYear == currentYear && selectedMonth == 12)
     }
     
 //    init(productNames: Binding<[String]>) {
@@ -44,7 +73,7 @@ struct CalendarView: View {
     
     var body: some View {
         VStack {
-            if CalendarUtil.isBetweenDec1AndDec26() {
+            if isEventToggleOpened {
                 if !isDescOpened {
                     Button(action: {
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -112,6 +141,9 @@ struct CalendarView: View {
                 .pickerStyle(.wheel)
                 .frame(width: 100)
                 .clipped()
+                .onChange(of: selectedYear) {
+                    
+                }
                 
                 Picker("월", selection: $selectedMonth) {
                     ForEach(months, id: \.self) { month in
@@ -121,6 +153,9 @@ struct CalendarView: View {
                 .pickerStyle(.wheel)
                 .frame(width: 80)
                 .clipped()
+                .onChange(of: selectedMonth) {
+                    
+                }
             }
             .frame(height: 100)
             
@@ -154,10 +189,13 @@ struct CalendarView: View {
                                 
                                 Menu("➕ 똥 추가") {
                                     ForEach(Size.displayCases, id: \.self) { size in
-                                        Button(size.rawValue) {
+                                        let label = size == .rabbit ? "\(size.rawValue) 🐰" : size.rawValue
+                                        Button(label) {
                                             Task {
-                                                updateLocalPoopInfo(date: currentDate, size: size)
-                                                try await poopService.savePoop(date: currentDate, size: size)
+                                                if let now = makeDate(year: selectedYear, month: selectedMonth, day: day) {
+                                                    updateLocalPoopInfo(date: now, size: size)
+                                                    try await poopService.savePoop(date: now, size: size)
+                                                }
                                             }
                                         }
                                     }
@@ -222,8 +260,10 @@ struct CalendarView: View {
                                     ForEach(productNames, id: \.self) { name in
                                         Button(name) {
                                             Task {
-                                                updateLocalPoopInfo(date: currentDate, size: .product, productName: name)
-                                                try await poopService.savePoop(date: currentDate, size: .product)
+                                                if let now = makeDate(year: selectedYear, month: selectedMonth, day: day) {
+                                                    updateLocalPoopInfo(date: now, size: .product, productName: name)
+                                                    try await poopService.savePoop(date: now, size: .product, productName: name)
+                                                }
                                             }
                                         }
                                     }
@@ -261,10 +301,26 @@ struct CalendarView: View {
                                     let poopList = savedPoop.filter { $0.size != .product && isSameDay($0.date, currentDate) }
                                     let productList = savedPoop.filter { $0.size == .product && isSameDay($0.date, currentDate) }
                                     
-                                    if poopList.count > 0 {
+                                    if poopList.count == 0 {
+                                        VStack(spacing: 0) {
+                                            HStack {
+                                                VStack {
+                                                    if productList.count > 0 {
+                                                        Circle()
+                                                            .fill(.moare)
+                                                            .frame(width: 8, height: 8)
+                                                    }
+                                                }
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                                            }
+                                            
+                                            Text("")
+                                        }
+                                        .frame(height: 60)
+                                    } else if poopList.count == 1 {
                                         let poopInfo = poopList.first!
                                         let poopSize: CGFloat = switch poopInfo.size {
-                                        case .small: 15
+                                        case .small, .rabbit: 15
                                         case .medium: 21
                                         case .big: 26
                                         case .tremendous: 30
@@ -278,63 +334,103 @@ struct CalendarView: View {
                                         case .tremendous: "T"
                                         case .diarrhea: "di"
                                         case .product: ""
+                                        case .rabbit: "r"
+                                        }
+                                        let poopEmoji: String = switch poopInfo.size {
+                                        case .small, .medium, .big, .tremendous: "💩"
+                                        case .diarrhea: "🤢"
+                                        case .product: ""
+                                        case .rabbit: "🐰"
                                         }
                                         
-                                        ZStack {
-                                            if isNormalModeEffective {
-                                                Text(poopInfo.size == .diarrhea ? "🤢" : "💩")
-                                                    .font(.system(size: poopSize))
-                                            } else {
-                                                Text("🎄")
-                                                    .font(.system(size: poopSize))
+                                        VStack(spacing: 0) {
+                                            ZStack {
+                                                if isNormalModeEffective {
+                                                    Text(poopEmoji)
+                                                        .font(.system(size: poopSize))
+                                                } else {
+                                                    Text("🎄")
+                                                        .font(.system(size: poopSize))
+                                                }
+                                                
+                                                HStack {
+                                                    Text(sizeText)
+                                                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                                        .font(.system(size: 10))
+                                                        .foregroundStyle(.secondary)
+                                                    
+                                                    VStack(spacing: 2) {
+                                                        if productList.count > 0 {
+                                                            Circle()
+                                                                .fill(.moare)
+                                                                .frame(width: 8, height: 8)
+                                                        }
+                                                    }
+                                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                                                }
                                             }
                                             
+                                            Text(getTime(date: poopInfo.date))
+                                                .font(.system(size: 11))
+                                        }
+                                        .frame(height: 60)
+                                    }  else if poopList.count > 1 {
+                                        VStack(spacing: 0) {
                                             HStack {
-                                                Text(sizeText)
-                                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                                Text("+\(poopList.count)")
                                                     .font(.system(size: 10))
                                                     .foregroundStyle(.secondary)
                                                 
-                                                VStack(spacing: 2) {
-                                                    if poopList.count > 1 {
-                                                        Text("+\(poopList.count)")
-                                                            .font(.system(size: 10))
-                                                            .foregroundStyle(.secondary)
-                                                    }
-                                                    
-                                                    if productList.count > 0 {
-                                                        Circle()
-                                                            .fill(.moare)
-                                                            .frame(width: 8, height: 8)
-                                                    }
-                                                }
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                                            }
-                                        }
-                                        .frame(height: 40)
-                                        
-                                        Text(getTime(date: poopInfo.date))
-                                            .font(.system(size: 11))
-                                    } else {
-                                        HStack {
-                                            VStack {
+                                                Spacer()
+                                                
                                                 if productList.count > 0 {
                                                     Circle()
                                                         .fill(.moare)
                                                         .frame(width: 8, height: 8)
                                                 }
                                             }
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                                            .padding(.bottom, 2)
+                                            
+                                            // 최대 3개까지만
+                                            ForEach(Array(poopList.indices.prefix(3)), id: \.self) { index in
+                                                let poopInfo = poopList[index]
+                                                let sizeText: String = switch poopInfo.size {
+                                                case .small: "s"
+                                                case .medium: "m"
+                                                case .big: "b"
+                                                case .tremendous: "T"
+                                                case .diarrhea: "di"
+                                                case .product: ""
+                                                case .rabbit: "r"
+                                                }
+                                                
+                                                HStack(spacing: 0) {
+                                                    Text(getTime(date: poopInfo.date))
+                                                        .font(.system(size: 11))
+                                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                                    
+                                                    Text(sizeText)
+                                                        .font(.system(size: 11))
+                                                        .fontWeight(.semibold)
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                                .padding(.bottom, 3)
+                                            }
                                         }
-                                        .frame(height: 40)
+                                        .frame(height: 60)
+                                    } else {
+                                        Text("")
+                                            .frame(height: 40)
                                         Text("")
                                     }
                                 }
-                                //                                else {
-                                //                                    Text("")
-                                //                                        .frame(height: 40)
-                                //                                    Text("")
-                                //                                }
+                            }
+                            .overlay {
+                                if let currentDate, Calendar.current.isDate(currentDate, inSameDayAs: Date()) {
+                                    RoundedRectangle(cornerRadius: 10).stroke(.green, lineWidth: 1)
+                                    .padding(.vertical, -2)
+                                    .padding(.horizontal, -3)
+                                }
                             }
                         }
                         .foregroundStyle(.primary)

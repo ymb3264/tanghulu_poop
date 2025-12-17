@@ -8,7 +8,7 @@
 import SwiftUI
 
 class CalendarUtil {
-    static func isBetweenDec1AndDec26() -> Bool {
+    static func isBetweenDec1AndDec25() -> Bool {
         let now = Date()
         let calendar = Calendar.current
         let year = calendar.component(.year, from: now)
