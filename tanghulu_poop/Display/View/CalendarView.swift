@@ -185,7 +185,7 @@ struct CalendarView: View {
                         Menu {
                             if let currentDate {
                                 let poopList = savedPoop.filter { $0.size != .product && isSameDay($0.date, currentDate) }
-                                let productList = savedPoop.filter { $0.size == .product && isSameDay($0.date, currentDate) }
+//                                let productList = savedPoop.filter { $0.size == .product && isSameDay($0.date, currentDate) }
                                 
                                 Menu("➕ 똥 추가") {
                                     ForEach(Size.displayCases, id: \.self) { size in
@@ -256,41 +256,41 @@ struct CalendarView: View {
                                     }
                                 }
                                 
-                                Menu("🧃 제품 추가") {
-                                    ForEach(productNames, id: \.self) { name in
-                                        Button(name) {
-                                            Task {
-                                                if let now = makeDate(year: selectedYear, month: selectedMonth, day: day) {
-                                                    updateLocalPoopInfo(date: now, size: .product, productName: name)
-                                                    try await poopService.savePoop(date: now, size: .product, productName: name)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+//                                Menu("🧃 제품 추가") {
+//                                    ForEach(productNames, id: \.self) { name in
+//                                        Button(name) {
+//                                            Task {
+//                                                if let now = makeDate(year: selectedYear, month: selectedMonth, day: day) {
+//                                                    updateLocalPoopInfo(date: now, size: .product, productName: name)
+//                                                    try await poopService.savePoop(date: now, size: .product, productName: name)
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
                                 
-                                if productList.count == 1 {
-                                    let productInfo = productList.first!
-                                    
-                                    Button("🧹 제품 제거") {
-                                        Task {
-                                            updateLocalPoopInfo(date: productInfo.date, size: nil)
-                                            try await poopService.deletePoop(date: productInfo.date)
-                                        }
-                                    }
-                                } else if productList.count > 1 {
-                                    Menu("🧹 제품 제거") {
-                                        ForEach(productList.indices, id: \.self) { index in
-                                            let productInfo = productList[index]
-                                            Button("\(productInfo.productName ?? productInfo.size.rawValue) \(getTime(date: productInfo.date))") {
-                                                Task {
-                                                    updateLocalPoopInfo(date: productInfo.date, size: nil)
-                                                    try await poopService.deletePoop(date: productInfo.date)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+//                                if productList.count == 1 {
+//                                    let productInfo = productList.first!
+//                                    
+//                                    Button("🧹 제품 제거") {
+//                                        Task {
+//                                            updateLocalPoopInfo(date: productInfo.date, size: nil)
+//                                            try await poopService.deletePoop(date: productInfo.date)
+//                                        }
+//                                    }
+//                                } else if productList.count > 1 {
+//                                    Menu("🧹 제품 제거") {
+//                                        ForEach(productList.indices, id: \.self) { index in
+//                                            let productInfo = productList[index]
+//                                            Button("\(productInfo.productName ?? productInfo.size.rawValue) \(getTime(date: productInfo.date))") {
+//                                                Task {
+//                                                    updateLocalPoopInfo(date: productInfo.date, size: nil)
+//                                                    try await poopService.deletePoop(date: productInfo.date)
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
                             }
                         } label: {
                             VStack(spacing: 0) {
@@ -299,20 +299,20 @@ struct CalendarView: View {
                                 
                                 if let currentDate {
                                     let poopList = savedPoop.filter { $0.size != .product && isSameDay($0.date, currentDate) }
-                                    let productList = savedPoop.filter { $0.size == .product && isSameDay($0.date, currentDate) }
+//                                    let productList = savedPoop.filter { $0.size == .product && isSameDay($0.date, currentDate) }
                                     
                                     if poopList.count == 0 {
                                         VStack(spacing: 0) {
-                                            HStack {
-                                                VStack {
-                                                    if productList.count > 0 {
-                                                        Circle()
-                                                            .fill(.moare)
-                                                            .frame(width: 8, height: 8)
-                                                    }
-                                                }
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                                            }
+//                                            HStack {
+//                                                VStack {
+//                                                    if productList.count > 0 {
+//                                                        Circle()
+//                                                            .fill(.moare)
+//                                                            .frame(width: 8, height: 8)
+//                                                    }
+//                                                }
+//                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+//                                            }
                                             
                                             Text("")
                                         }
@@ -355,18 +355,18 @@ struct CalendarView: View {
                                                 
                                                 HStack {
                                                     Text(sizeText)
-                                                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                                                         .font(.system(size: 10))
                                                         .foregroundStyle(.secondary)
                                                     
-                                                    VStack(spacing: 2) {
-                                                        if productList.count > 0 {
-                                                            Circle()
-                                                                .fill(.moare)
-                                                                .frame(width: 8, height: 8)
-                                                        }
-                                                    }
-                                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+//                                                    VStack(spacing: 2) {
+//                                                        if productList.count > 0 {
+//                                                            Circle()
+//                                                                .fill(.moare)
+//                                                                .frame(width: 8, height: 8)
+//                                                        }
+//                                                    }
+//                                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                                                 }
                                             }
                                             
@@ -377,17 +377,17 @@ struct CalendarView: View {
                                     }  else if poopList.count > 1 {
                                         VStack(spacing: 0) {
                                             HStack {
+                                                Spacer()
+                                                
                                                 Text("+\(poopList.count)")
                                                     .font(.system(size: 10))
                                                     .foregroundStyle(.secondary)
                                                 
-                                                Spacer()
-                                                
-                                                if productList.count > 0 {
-                                                    Circle()
-                                                        .fill(.moare)
-                                                        .frame(width: 8, height: 8)
-                                                }
+//                                                if productList.count > 0 {
+//                                                    Circle()
+//                                                        .fill(.moare)
+//                                                        .frame(width: 8, height: 8)
+//                                                }
                                             }
                                             .padding(.bottom, 2)
                                             

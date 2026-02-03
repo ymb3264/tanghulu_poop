@@ -41,12 +41,14 @@ struct ProductsView: View {
                     let product = item.product
                     let productId = product.productId
                     let isVoted = userVotes.contains(where: { $0.productId == productId })
+                    let fontSize: CGFloat = product.name.contains("니얼굴") ? 12 : 17
                     
                     HStack {
                         Text("\(rank)")
                             .frame(width: 30)
                         
                         Text(product.name)
+                            .font(.system(size: fontSize))
                             .lineLimit(2)
                         
                         Spacer()
