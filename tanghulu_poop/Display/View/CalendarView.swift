@@ -22,6 +22,11 @@ struct CalendarView: View {
     @State private var reportHour = ""
     @State private var reportSize = ""
     
+    // update poop date
+    @State private var isTimeSheetPresented = false
+    @State private var editingPoop: PoopInfo? = nil
+    @State private var editingTime: Date = Date()
+    
     private let years = Array(2025...2030)
     private let months = Array(1...12)
     
@@ -268,7 +273,7 @@ struct CalendarView: View {
                                 }
                                 
                                 if poopList.count > 0 {
-                                    Menu("🛠️ 똥 변경") {
+                                    Menu("🛠️ 똥 사이즈 변경") {
                                         if poopList.count == 1 {
                                             let poopInfo = poopList.first!
                                             
@@ -293,6 +298,29 @@ struct CalendarView: View {
                                                             }
                                                         }
                                                     }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    
+                                    if poopList.count == 1 {
+                                        let poopInfo = poopList.first!
+                                        
+                                        Button("🛠️ 똥 시간 변경") {
+                                            editingPoop = poopInfo
+                                            editingTime = poopInfo.date
+                                            isTimeSheetPresented = true
+                                        }
+                                    } else if poopList.count > 1 {
+                                        Menu("🛠️ 똥 시간 변경") {
+                                            ForEach(poopList.indices, id: \.self) { index in
+                                                let poopInfo = poopList[index]
+                                                
+                                                Button("\(poopInfo.size.rawValue) \(getTime(date: poopInfo.date))") {
+                                                    editingPoop = poopInfo
+                                                    editingTime = poopInfo.date
+                                                    isTimeSheetPresented = true
                                                 }
                                             }
                                         }
@@ -519,6 +547,36 @@ struct CalendarView: View {
                 }
             }
         }
+        .sheet(isPresented: $isTimeSheetPresented) {
+            VStack {
+                DatePicker(
+                    "시간",
+                    selection: $editingTime,
+                    displayedComponents: [.hourAndMinute]
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                
+                HStack {
+                    Button("취소") { isTimeSheetPresented = false }
+                        .frame(maxWidth: .infinity)
+                    Button("완료") {
+                        if let editingPoop {
+                            Task {
+                                updateLocalPoopTime(oldDate: editingPoop.date, newDate: editingTime)
+                                try await poopService.deletePoop(date: editingPoop.date)
+                                try await poopService.savePoop(date: editingTime, size: editingPoop.size)
+                            }
+                        }
+                        
+                        isTimeSheetPresented = false
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .presentationDetents([.height(320)])
+//            .presentationDetents([.medium])
+        }
     }
     
     // 날짜 배열 생성
@@ -573,7 +631,8 @@ struct CalendarView: View {
 //    }
     
     func isSameMoment(_ d1: Date, _ d2: Date) -> Bool {
-        return d1 == d2
+        Int(d1.timeIntervalSince1970) == Int(d2.timeIntervalSince1970)
+//        return d1 == d2
     }
     
     func getTime(date: Date) -> String {
@@ -600,6 +659,13 @@ struct CalendarView: View {
             if let size {
                 savedPoop.append(PoopInfo(date: date, size: size, productName: productName))
             }
+        }
+    }
+    
+    func updateLocalPoopTime(oldDate: Date, newDate: Date) {
+        if let index = savedPoop.firstIndex(where: { isSameMoment($0.date, oldDate) }) {
+            let oldPoop = savedPoop[index]
+            savedPoop[index] = PoopInfo(date: newDate, size: oldPoop.size)
         }
     }
 }
