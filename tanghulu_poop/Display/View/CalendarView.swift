@@ -13,7 +13,14 @@ struct CalendarView: View {
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
     @State private var selectedMonth = Calendar.current.component(.month, from: Date())
     @State private var savedPoop: [PoopInfo] = []
-    @State private var isDescOpened = false
+    @State private var isEventDescOpened = false
+    
+    // report
+    @State private var isReportOpened = false
+    @State private var hasReport = false
+    @State private var reportDayOfWeek = ""
+    @State private var reportHour = ""
+    @State private var reportSize = ""
     
     private let years = Array(2025...2030)
     private let months = Array(1...12)
@@ -54,7 +61,7 @@ struct CalendarView: View {
         let hasStoredValue = UserDefaults.standard.object(forKey: "isNormalMode") != nil
         return hasStoredValue ? isNormalModeRaw : false
     }
-    private var isEventToggleOpened: Bool {
+    private var isEventToggleShowing: Bool {
         // 1) 오늘이 이벤트 기간(12/1~12/25)인지
         guard CalendarUtil.isBetweenDec1AndDec25() else {
             return false
@@ -66,6 +73,11 @@ struct CalendarView: View {
         return (selectedYear == currentYear && selectedMonth == 12)
     }
     
+    private var isReportShowing: Bool {
+        // 1) 매달 첫째주에만
+        return CalendarUtil.isInFirstWeekOfMonth()
+    }
+    
 //    init(productNames: Binding<[String]>) {
 //        self._productNames = productNames
 //        UserDefaults.standard.removeObject(forKey: "isNormalMode")
@@ -73,11 +85,11 @@ struct CalendarView: View {
     
     var body: some View {
         VStack {
-            if isEventToggleOpened {
-                if !isDescOpened {
+            if isEventToggleShowing {
+                if !isEventDescOpened {
                     Button(action: {
                         withAnimation(.easeInOut(duration: 0.3)) {
-                            isDescOpened = true
+                            isEventDescOpened = true
                         }
                     }) {
                         Text("클릭 🎄")
@@ -85,7 +97,7 @@ struct CalendarView: View {
                     .foregroundStyle(.secondary)
                 }
                 
-                if isDescOpened {
+                if isEventDescOpened {
                     VStack(spacing: 12) {
                         Text("12월 25일")
                             .foregroundStyle(.darkRed)
@@ -114,7 +126,7 @@ struct CalendarView: View {
                             
                             Button(action: {
                                 withAnimation(.easeInOut(duration: 0.3)) {
-                                    isDescOpened = false
+                                    isEventDescOpened = false
                                 }
                             }) {
                                 Text("닫기")
@@ -130,6 +142,60 @@ struct CalendarView: View {
                     }
                 }
             }
+            
+            if isReportShowing {
+                VStack(alignment: .leading, spacing: 6) {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isReportOpened = !isReportOpened
+                        }
+                    }) {
+                        Text("내 똥 분석 리포트 📋")
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.primary)
+                    
+                    if isReportOpened {
+                        Text("※ 내 똥 분석 리포트는 매달 첫째주에만 노출됩니다.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                            .padding(.bottom, 4)
+                        
+                        if hasReport {
+                            Text("주로 ")
+                            + Text("\(reportDayOfWeek)요일").fontWeight(.bold)
+                            + Text("에 화장실을 방문하는 편이에요.")
+                            
+                            Text("지난달에는 ")
+                            + Text(reportHour).fontWeight(.bold)
+                            + Text("에 가장 자주 방문했어요.")
+                            
+                            Text("지난달 가장 많이 기록된 사이즈는")
+                            + Text(" \(reportSize) ").fontWeight(.bold)
+                            + Text("이었습니다.")
+                        } else {
+                            Text("지날달 6일 이상의 똥 기록이 있을 경우에만 분석 리포트가 제공됩니다.")
+                        }
+                        
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isReportOpened = false
+                            }
+                        }) {
+                            Text("닫기")
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                                .overlay {
+                                    Capsule()
+                                        .stroke(.secondary, lineWidth: 1)
+                                }
+                        }
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                    }
+                }
+            }
+
             
             // 🔽 년/월 선택 Picker
             HStack {
@@ -327,15 +393,6 @@ struct CalendarView: View {
                                         case .diarrhea: 21
                                         case .product: 0
                                         }
-                                        let sizeText: String = switch poopInfo.size {
-                                        case .small: "s"
-                                        case .medium: "m"
-                                        case .big: "b"
-                                        case .tremendous: "T"
-                                        case .diarrhea: "di"
-                                        case .product: ""
-                                        case .rabbit: "r"
-                                        }
                                         let poopEmoji: String = switch poopInfo.size {
                                         case .small, .medium, .big, .tremendous: "💩"
                                         case .diarrhea: "🤢"
@@ -354,7 +411,7 @@ struct CalendarView: View {
                                                 }
                                                 
                                                 HStack {
-                                                    Text(sizeText)
+                                                    Text(poopInfo.size.text)
                                                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                                                         .font(.system(size: 10))
                                                         .foregroundStyle(.secondary)
@@ -394,22 +451,13 @@ struct CalendarView: View {
                                             // 최대 3개까지만
                                             ForEach(Array(poopList.indices.prefix(3)), id: \.self) { index in
                                                 let poopInfo = poopList[index]
-                                                let sizeText: String = switch poopInfo.size {
-                                                case .small: "s"
-                                                case .medium: "m"
-                                                case .big: "b"
-                                                case .tremendous: "T"
-                                                case .diarrhea: "di"
-                                                case .product: ""
-                                                case .rabbit: "r"
-                                                }
                                                 
                                                 HStack(spacing: 0) {
                                                     Text(getTime(date: poopInfo.date))
                                                         .font(.system(size: 11))
                                                         .frame(maxWidth: .infinity, alignment: .leading)
                                                     
-                                                    Text(sizeText)
+                                                    Text(poopInfo.size.text)
                                                         .font(.system(size: 11))
                                                         .fontWeight(.semibold)
                                                         .foregroundStyle(.secondary)
@@ -451,6 +499,20 @@ struct CalendarView: View {
                 do {
                     try await poopService.loadAllPoop(completion: { poop in
                         savedPoop = poop
+                        
+                        // report 생성
+                        let reportBuilder = PoopReportBuilder()
+                        reportDayOfWeek = reportBuilder.dayOfWeekReport(savedPoop: savedPoop)
+                        reportHour = reportBuilder.hourReport(savedPoop: savedPoop)
+                        reportSize = reportBuilder.sizeReport(savedPoop: savedPoop)
+                        
+                        if !reportDayOfWeek.isEmpty && !reportHour.isEmpty && !reportSize.isEmpty {
+                            isReportOpened = true
+                            hasReport = true
+                        } else {
+                            isReportOpened = false
+                            hasReport = false
+                        }
                     })
                 } catch {
                     print("error: \(error)")

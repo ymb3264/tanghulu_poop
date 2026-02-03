@@ -29,6 +29,20 @@ enum Size: String, Codable, CaseIterable {
     }
 }
 
+extension Size {
+    var text: String {
+        switch self {
+        case .small: "s"
+        case .medium: "m"
+        case .big: "b"
+        case .tremendous: "T"
+        case .diarrhea: "di"
+        case .product: ""
+        case .rabbit: "r"
+        }
+    }
+}
+
 class PoopService {
 //        let formatter = DateFormatter()
 //        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
