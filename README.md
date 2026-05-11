@@ -12,9 +12,9 @@
 - AWS Cognito + DynamoDB 기반 사용자별 데이터 저장
 
 ## 스크린샷
-<img width="24%" alt="iphone_app_store_3" src="https://github.com/user-attachments/assets/6c021c14-be88-4251-8c66-eaae631f9cd9" />
-<img width="24%" alt="iphone_app_store_2" src="https://github.com/user-attachments/assets/ceee6848-faf3-4f5f-94e0-2cf1c9034a3a" />
 <img width="24%" alt="iphone_app_store_1" src="https://github.com/user-attachments/assets/92aad8b0-0fca-4cc8-8a73-03554846963a" />
+<img width="24%" alt="iphone_app_store_2" src="https://github.com/user-attachments/assets/ceee6848-faf3-4f5f-94e0-2cf1c9034a3a" />
+<img width="24%" alt="iphone_app_store_3" src="https://github.com/user-attachments/assets/6c021c14-be88-4251-8c66-eaae631f9cd9" />
 <img width="24%" alt="iphone_app_store_4" src="https://github.com/user-attachments/assets/fa32ef64-f16e-49b4-af6b-0a060fd80fd3" />
 
 ## 기술 스택
