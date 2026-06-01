@@ -18,7 +18,8 @@
 <img width="24%" alt="iphone_app_store_4" src="https://github.com/user-attachments/assets/fa32ef64-f16e-49b4-af6b-0a060fd80fd3" />
 
 ## 기술 스택
-- Swift
-- SwiftUI
-- AWS Cognito, AWS DynamoDB
-- Kingfisher
+- **Language & UI**: Swift, SwiftUI
+- **Networking**: Swift Concurrency (async/await)
+- **Authentication**: AWS Cognito
+- **Cloud Database**: AWS DynamoDB
+- **Media**: Kingfisher
